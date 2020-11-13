@@ -13,12 +13,6 @@ const app = new PIXI.Application({
 
 document.body.appendChild(app.view);
 
-window.addEventListener('resize', resize);
-
-function resize() {
-    app.renderer.resize(window.innerWidth, window.innerHeight);
-}
-
 if (!(
         window.File &&
         window.FileReader &&
@@ -75,6 +69,8 @@ function rgb2hex(rgb) {
 };
 
 function play(midi) {
+    //app.screen.width = window.document.body.clientWidth
+    //app.screen.height = window.document.body.clientHeight
     if (midi) {
         midi.tracks.forEach(track => {
             const synth = new Tone.PolySynth().toDestination();
@@ -112,5 +108,3 @@ function play(midi) {
 app.stage.filters = [
     // new PIXI.filters.GlowFilter({ distance: 5, outerStrength: 2 })
 ];
-
-resize();
