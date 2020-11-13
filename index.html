@@ -1,0 +1,37 @@
+<html>
+
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.3.3/pixi.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pixi-filters@latest/dist/pixi-filters.js"></script>
+    <script src="https://unpkg.com/@tonejs/midi"></script>
+    <script src="https://unpkg.com/tone"></script>
+
+    <style>
+        body {
+            margin: 0px;
+        }
+        
+        canvas {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <tone-content>
+        <div id="Description">
+            Parse a MIDI file into a Tone.js-friendly JSON format.
+        </div>
+        <div id="FileDrop">
+            <div id="Text">
+                Drop a midi file here
+            </div>
+            <input type="file" accept="audio/midi" />
+        </div>
+        <tone-play-toggle disabled></tone-play-toggle>
+    </tone-content>
+</body>
+
+<script src="/js/index.js"></script>
+
+</html>
