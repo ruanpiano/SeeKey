@@ -61,12 +61,12 @@ function parseFile(file) {
 
 let globalPiano = null;
 
-Soundfont.instrument(new AudioContext(), 'acoustic_grand_piano').then(piano => {
-    globalPiano = piano;
-})
-
 function play(midi) {
     if (midi) {
+
+        Soundfont.instrument(new AudioContext(), 'acoustic_grand_piano').then(piano => {
+            globalPiano = piano;
+        })
 
         if (!midi.header.tempos[0]) {
             globalTempo = 120;
