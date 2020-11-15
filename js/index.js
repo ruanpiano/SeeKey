@@ -140,7 +140,7 @@ function play(midi) {
 
                 }
             }
-            if (child.y >= app.screen.height + child.height) {
+            if (child.y >= app.screen.height * 2) {
                 app.stage.removeChild(child);
             }
         })
