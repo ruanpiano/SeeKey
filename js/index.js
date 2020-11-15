@@ -5,7 +5,6 @@ let globalMidi = null;
     globalMidi = midi;
 })*/
 
-
 const app = new PIXI.Application({
     autoResize: true,
     resolution: devicePixelRatio
@@ -39,13 +38,10 @@ if (!(
     document
         .querySelector("#FileDrop input")
         .addEventListener("change", (e) => {
-            //get the files
             const files = e.target.files;
             if (files.length > 0) {
                 const file = files[0];
-                document.querySelector(
-                    "#FileDrop #Text"
-                ).textContent = file.name;
+                document.querySelector("#FileDrop #Text").textContent = file.name;
                 parseFile(file);
             }
         });
@@ -64,31 +60,64 @@ function parseFile(file) {
     reader.readAsArrayBuffer(file);
 }
 
-function rgb2hex(rgb) {
-    return ((rgb[0] * 255 << 16) + (rgb[1] * 255 << 8) + rgb[2] * 255);
-};
+let globalTempo = 0;
+
+let synthArray = [];
+
+let globalPiano = null;
+
+Soundfont.instrument(new AudioContext(), 'acoustic_grand_piano').then(piano => {
+    globalPiano = piano;
+})
 
 function play(midi) {
-    //app.screen.width = window.document.body.clientWidth
-    //app.screen.height = window.document.body.clientHeight
     if (midi) {
-        midi.tracks.forEach(track => {
-            const synth = new Tone.PolySynth().toDestination();
+
+        if (!midi.header.tempos[0]) {
+            globalTempo = 120;
+        } else {
+
+            globalTempo = midi.header.tempos[0].bpm;
+        }
+
+        midi.tracks.forEach((track, i) => {
+            /*midi.header.tempos.forEach(tempo => {
+                Tone.getDraw().schedule(function() {
+                    globalTempo = tempo.bpm;
+                }, tempo.time + Tone.now() + (globalTempo / 60))
+            });*/
+
+            if (track.controlChanges[64]) {
+
+                track.controlChanges[64].forEach(event => {
+                    //console.log(event)
+                    Tone.getDraw().schedule(function() {
+                        if (event.value == 1)
+                            globalPiano.opts.release = 127
+                        else
+                            globalPiano.opts.release = 0.7;
+                    }, event.time + Tone.now() + (globalTempo / 60))
+                })
+            }
+            synthArray.push(new Tone.PolySynth().toDestination());
             track.notes.forEach(note => {
                 if (track.instrument.percussion) return;
-                synth.triggerAttackRelease(note.name, note.duration, note.time + Tone.now() + midi.header.tempos[0].bpm / 60, note.velocity)
+                //synthArray[i].triggerAttackRelease(note.name, note.duration, note.time + Tone.now() + (globalTempo / PIXI.Ticker.system.FPS), note.velocity)
                 Tone.getDraw().schedule(function() {
+                    //synthArray[i].triggerAttackRelease(note.name, note.duration, Tone.now() + (globalTempo / 60), note.velocity)
                     let newNote = new PIXI.Graphics();
                     newNote.beginFill(0xFF0000, note.velocity + 0.2)
-                    let height = (note.duration * globalMidi.header.tempos[0].bpm);
-                    let beat = midi.header.tempos[0].bpm / 60;
+                    let height = (note.duration * globalTempo);
                     newNote.drawRect((note.midi - 21) / 88 * app.screen.width, 0 - height, (app.screen.width / 88), height);
                     newNote.endFill();
+                    newNote.note = note;
+                    newNote.note.channel = i;
                     newNote.time = Date.now();
+                    newNote.note.played = false;
                     app.stage.addChild(newNote);
-                    // newNote.filters = [new PIXI.filters.GodrayFilter()]
+                    globalPiano.play(note.name, globalPiano.context.currentTime + (globalTempo / 60), { 'gain': note.velocity * 2 }).stop(globalPiano.context.currentTime + (globalTempo / 60) + note.duration)
+                        // newNote.filters = [new PIXI.filters.GodrayFilter()]
                 }, note.time + Tone.now())
-
             })
 
         });
@@ -97,10 +126,23 @@ function play(midi) {
 
     PIXI.Ticker.shared.add(function(time) {
         app.stage.children.forEach(child => {
+            child.y += app.screen.height / globalTempo;
+            if (child.y >= app.screen.height) {
+                note = child.note;
+                if (!note.played) {
+                    // synthArray[note.channel].triggerAttackRelease(note.name, note.duration, synthArray[0].now(), note.velocity)
+                    /*let fonte = "audio/" + note.pitch + note.octave + "v6.ogg";
+                    console.log(fonte)
+                    var sound = new Howl({ src: fonte });
+                    sound.play();*/
+                    //globalPiano.play(note.name, globalPiano.context.currentTime, { 'gain': note.velocity }).stop(globalPiano.context.currentTime + note.duration)
+                    note.played = true;
+
+                }
+            }
             if (child.y >= app.screen.height + child.height) {
                 app.stage.removeChild(child);
             }
-            child.y += app.screen.height / globalMidi.header.tempos[0].bpm;
         })
     })
 }
