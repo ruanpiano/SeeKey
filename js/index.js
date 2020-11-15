@@ -64,6 +64,8 @@ let globalPiano = null;
 function play(midi) {
     if (midi) {
 
+        Tone.context.resume();
+
         Soundfont.instrument(new AudioContext(), 'acoustic_grand_piano').then(piano => {
             globalPiano = piano;
         })
