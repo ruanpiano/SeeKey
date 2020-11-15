@@ -24,13 +24,13 @@
 <body>
     <tone-content>
         <div id="Description">
-            Parse a MIDI file into a Tone.js-friendly JSON format.
+            @ruanpianos's SeeKey -- A friendly Synthesia Clone
         </div>
         <div id="FileDrop">
             <div id="Text">
-                Drop a midi file here
+                Please, drop a midi file here to see the magic happen.
             </div>
-            <input type="file" accept="audio/midi" />
+            <input type="file" onclick="this.value=null" accept="audio/midi" />
         </div>
         <tone-play-toggle disabled></tone-play-toggle>
     </tone-content>

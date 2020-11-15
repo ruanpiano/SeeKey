@@ -1,4 +1,3 @@
-let ticker = PIXI.Ticker.system;
 let globalMidi = null;
 
 /*const midi = Midi.fromUrl("abwhsolo.mid").then(midi => {
@@ -60,10 +59,6 @@ function parseFile(file) {
     reader.readAsArrayBuffer(file);
 }
 
-let globalTempo = 0;
-
-let synthArray = [];
-
 let globalPiano = null;
 
 Soundfont.instrument(new AudioContext(), 'acoustic_grand_piano').then(piano => {
@@ -99,54 +94,48 @@ function play(midi) {
                     }, event.time + Tone.now() + (globalTempo / 60))
                 })
             }
-            synthArray.push(new Tone.PolySynth().toDestination());
+
             track.notes.forEach(note => {
                 if (track.instrument.percussion) return;
-                //synthArray[i].triggerAttackRelease(note.name, note.duration, note.time + Tone.now() + (globalTempo / PIXI.Ticker.system.FPS), note.velocity)
+                //globalPiano.play(note.name, globalPiano.context.currentTime + note.time, { 'gain': note.velocity * 2 }).stop(globalPiano.context.currentTime + note.time + note.duration)
                 Tone.getDraw().schedule(function() {
-                    //synthArray[i].triggerAttackRelease(note.name, note.duration, Tone.now() + (globalTempo / 60), note.velocity)
                     let newNote = new PIXI.Graphics();
-                    newNote.beginFill(0xFF0000, note.velocity + 0.2)
+                    //let hex = Math.floor(Math.abs(Math.sin(Tone.getDraw()._animationFrame) / 200) + 0xFFFFFF);
+                    newNote.beginFill(0xFF0000, note.velocity)
                     let height = (note.duration * globalTempo);
                     newNote.drawRect((note.midi - 21) / 88 * app.screen.width, 0 - height, (app.screen.width / 88), height);
                     newNote.endFill();
+                    // newNote.pivot
                     newNote.note = note;
                     newNote.note.channel = i;
                     newNote.time = Date.now();
                     newNote.note.played = false;
+                    newNote.filters = [new PIXI.filters.ColorMatrixFilter()]
+                    newNote.filters[0].hue(Tone.getDraw()._animationFrame / globalTempo)
                     app.stage.addChild(newNote);
                     globalPiano.play(note.name, globalPiano.context.currentTime + (globalTempo / 60), { 'gain': note.velocity * 2 }).stop(globalPiano.context.currentTime + (globalTempo / 60) + note.duration)
                         // newNote.filters = [new PIXI.filters.GodrayFilter()]
-                }, note.time + Tone.now())
+                }, note.time + globalPiano.context.currentTime)
             })
 
         });
     }
-
-
-    PIXI.Ticker.shared.add(function(time) {
-        app.stage.children.forEach(child => {
-            child.y += app.screen.height / globalTempo;
-            if (child.y >= app.screen.height) {
-                note = child.note;
-                if (!note.played) {
-                    // synthArray[note.channel].triggerAttackRelease(note.name, note.duration, synthArray[0].now(), note.velocity)
-                    /*let fonte = "audio/" + note.pitch + note.octave + "v6.ogg";
-                    console.log(fonte)
-                    var sound = new Howl({ src: fonte });
-                    sound.play();*/
-                    //globalPiano.play(note.name, globalPiano.context.currentTime, { 'gain': note.velocity }).stop(globalPiano.context.currentTime + note.duration)
-                    note.played = true;
-
-                }
-            }
-            if (child.y >= app.screen.height * 2) {
-                app.stage.removeChild(child);
-            }
-        })
-    })
 }
 
-app.stage.filters = [
-    // new PIXI.filters.GlowFilter({ distance: 5, outerStrength: 2 })
-];
+PIXI.Ticker.shared.add(function(time) {
+    app.stage.children.forEach(child => {
+        child.y += app.screen.height / globalTempo;
+
+        if (child.y > app.screen.height + child.height) {
+            child.destroy();
+            app.stage.removeChild(child);
+        }
+    })
+
+    if (globalMidi && (Tone.getDraw()._events.length == 0) && (app.stage.children.length == 0)) {
+        console.log("Finished")
+        document.querySelector("canvas").setAttribute("style", "display: none;");
+        document.querySelector("tone-content").setAttribute("style", "display:block;");
+        globalMidi = null;
+    }
+});
