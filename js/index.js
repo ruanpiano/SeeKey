@@ -55,11 +55,12 @@ function parseFile(file) {
         globalMidi = midi;
         document.querySelector("canvas").setAttribute("style", "display: block;");
         document.querySelector("tone-content").setAttribute("style", "display:none;");
+        document.querySelector("loading").setAttribute("style", "display:block;");
     };
     reader.readAsArrayBuffer(file);
 }
 
-let globalPiano = null;
+let loaded = false;
 
 function play(midi) {
     if (midi) {
@@ -67,60 +68,62 @@ function play(midi) {
         Tone.context.resume();
 
         Soundfont.instrument(new AudioContext(), 'acoustic_grand_piano').then(piano => {
-            globalPiano = piano;
-        })
 
-        if (!midi.header.tempos[0]) {
-            globalTempo = 120;
-        } else {
+            loaded = true;
+            document.querySelector("loading").setAttribute("style", "display:none;");
 
-            globalTempo = midi.header.tempos[0].bpm;
-        }
+            if (!midi.header.tempos[0]) {
+                globalTempo = 120;
+            } else {
 
-        midi.tracks.forEach((track, i) => {
-            /*midi.header.tempos.forEach(tempo => {
-                Tone.getDraw().schedule(function() {
-                    globalTempo = tempo.bpm;
-                }, tempo.time + Tone.now() + (globalTempo / 60))
-            });*/
-
-            if (track.controlChanges[64]) {
-
-                track.controlChanges[64].forEach(event => {
-                    //console.log(event)
-                    Tone.getDraw().schedule(function() {
-                        if (event.value == 1)
-                            globalPiano.opts.release = 127
-                        else
-                            globalPiano.opts.release = 0.7;
-                    }, event.time + Tone.now() + (globalTempo / 60))
-                })
+                globalTempo = midi.header.tempos[0].bpm;
             }
 
-            track.notes.forEach(note => {
-                if (track.instrument.percussion) return;
-                //globalPiano.play(note.name, globalPiano.context.currentTime + note.time, { 'gain': note.velocity * 2 }).stop(globalPiano.context.currentTime + note.time + note.duration)
-                Tone.getDraw().schedule(function() {
-                    let newNote = new PIXI.Graphics();
-                    //let hex = Math.floor(Math.abs(Math.sin(Tone.getDraw()._animationFrame) / 200) + 0xFFFFFF);
-                    newNote.beginFill(0xFF0000, note.velocity)
-                    let height = (note.duration * globalTempo);
-                    newNote.drawRect((note.midi - 21) / 88 * app.screen.width, 0 - height, (app.screen.width / 88), height);
-                    newNote.endFill();
-                    // newNote.pivot
-                    newNote.note = note;
-                    newNote.note.channel = i;
-                    newNote.time = Date.now();
-                    newNote.note.played = false;
-                    newNote.filters = [new PIXI.filters.ColorMatrixFilter()]
-                    newNote.filters[0].hue(Tone.getDraw()._animationFrame / globalTempo)
-                    app.stage.addChild(newNote);
-                    globalPiano.play(note.name, globalPiano.context.currentTime + (globalTempo / 60), { 'gain': note.velocity * 2 }).stop(globalPiano.context.currentTime + (globalTempo / 60) + note.duration)
-                        // newNote.filters = [new PIXI.filters.GodrayFilter()]
-                }, note.time + Tone.now())
-            })
+            midi.tracks.forEach((track, i) => {
+                /*midi.header.tempos.forEach(tempo => {
+                    Tone.getDraw().schedule(function() {
+                        globalTempo = tempo.bpm;
+                    }, tempo.time + Tone.now() + (globalTempo / 60))
+                });*/
 
-        });
+                if (track.controlChanges[64]) {
+
+                    track.controlChanges[64].forEach(event => {
+                        //console.log(event)
+                        Tone.getDraw().schedule(function() {
+                            if (event.value == 1)
+                                piano.opts.release = 127
+                            else
+                                piano.opts.release = 0.7;
+                        }, event.time + Tone.now() + (globalTempo / 60))
+                    })
+                }
+
+                track.notes.forEach(note => {
+                    if (track.instrument.percussion) return;
+                    //globalPiano.play(note.name, globalPiano.context.currentTime + note.time, { 'gain': note.velocity * 2 }).stop(globalPiano.context.currentTime + note.time + note.duration)
+                    Tone.getDraw().schedule(function() {
+                        let newNote = new PIXI.Graphics();
+                        //let hex = Math.floor(Math.abs(Math.sin(Tone.getDraw()._animationFrame) / 200) + 0xFFFFFF);
+                        newNote.beginFill(0xFF0000, note.velocity)
+                        let height = (note.duration * globalTempo);
+                        newNote.drawRect((note.midi - 21) / 88 * app.screen.width, 0 - height, (app.screen.width / 88), height);
+                        newNote.endFill();
+                        // newNote.pivot
+                        newNote.note = note;
+                        newNote.note.channel = i;
+                        newNote.time = Date.now();
+                        newNote.note.played = false;
+                        newNote.filters = [new PIXI.filters.ColorMatrixFilter()]
+                        newNote.filters[0].hue(Tone.getDraw()._animationFrame / globalTempo)
+                        app.stage.addChild(newNote);
+                        piano.play(note.name, piano.context.currentTime + (globalTempo / 60), { 'gain': note.velocity * 2 }).stop(piano.context.currentTime + (globalTempo / 60) + note.duration)
+                            // newNote.filters = [new PIXI.filters.GodrayFilter()]
+                    }, note.time + Tone.now())
+                })
+
+            });
+        })
     }
 }
 
@@ -134,10 +137,12 @@ PIXI.Ticker.shared.add(function(time) {
         }
     })
 
-    if (globalMidi && (Tone.getDraw()._events.length == 0) && (app.stage.children.length == 0)) {
+    if (globalMidi && loaded && (Tone.getDraw()._events.length == 0) && (app.stage.children.length == 0)) {
         console.log("Finished")
         document.querySelector("canvas").setAttribute("style", "display: none;");
         document.querySelector("tone-content").setAttribute("style", "display:block;");
+        document.querySelector("loading").setAttribute("style", "display:block;");
         globalMidi = null;
+        loaded = false;
     }
 });
