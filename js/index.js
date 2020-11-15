@@ -117,7 +117,7 @@ function play(midi) {
                     app.stage.addChild(newNote);
                     globalPiano.play(note.name, globalPiano.context.currentTime + (globalTempo / 60), { 'gain': note.velocity * 2 }).stop(globalPiano.context.currentTime + (globalTempo / 60) + note.duration)
                         // newNote.filters = [new PIXI.filters.GodrayFilter()]
-                }, note.time + globalPiano.context.currentTime)
+                }, note.time + Tone.now())
             })
 
         });
