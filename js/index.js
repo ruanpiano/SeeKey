@@ -64,6 +64,8 @@ let loaded = false;
 
 let mainContext = new AudioContext();
 
+let progress = 0;
+
 function play(midi) {
     if (midi) {
 
@@ -105,6 +107,7 @@ function play(midi) {
             if (instrumentName === "synthstrings_1") instrumentName = "synth_strings_1";
             if (instrumentName === "synthstrings_2") instrumentName = "synth_strings_2";
             if (instrumentName === "synthbrass_1") instrumentName = "synth_brass_1";
+            if (instrumentName === "synthbrass_2") instrumentName = "synth_brass_2";
             if (instrumentName === "clavi") instrumentName = "clavinet";
 
             Soundfont.instrument(mainContext, instrumentName, { 'soundfont': soundkit }).then(instrument => {
@@ -153,16 +156,20 @@ function play(midi) {
 
                 done++;
                 console.log(done);
+                progress = (100 * (done / globalMidi.tracks.length)).toFixed(2)
+                document.querySelector("loading").textContent = "Loading, please wait... " + progress + " %";
             });
 
         })
 
         app.ticker.add(function() {
-            if (done == midi.tracks.length) {
+            let executed = false;
+            if (done == midi.tracks.length && !executed) {
                 //Tone.getContext().resume;
                 Tone.start()
                 Tone.getTransport().start()
                 document.querySelector("loading").setAttribute("style", "display:none;");
+                executed = true;
             }
         })
 
