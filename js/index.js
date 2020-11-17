@@ -42,9 +42,11 @@ if (!(
                 const file = files[0];
                 document.querySelector("#FileDrop #Text").textContent = file.name;
                 parseFile(file);
-                Tone.start()
             }
-        });
+        })
+        .addEventListener("click", function() {
+            Tone.start()
+        })
 }
 
 function parseFile(file) {
@@ -165,7 +167,7 @@ function play(midi) {
 
         app.ticker.add(function() {
             let executed = false;
-            if (done == midi.tracks.length && !executed) {
+            if (done == midi.tracks.length && !executed && Tone.getContext().state === "running") {
                 //Tone.getContext().resume;                
                 Tone.getTransport().start()
                 document.querySelector("loading").setAttribute("style", "display:none;");
