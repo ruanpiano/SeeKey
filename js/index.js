@@ -170,9 +170,13 @@ function play(midi) {
 
         app.ticker.add(function() {
             let executed = false;
+            if (Tone.getContext().state !== "running" && mainContext.state !== "running") {
+                Tone.getContext().resume();
+                mainContext.resume();
+                return;
+            }
             if (done == midi.tracks.length && !executed && Tone.getContext().state === "running" && mainContext.state === "running") {
-                //Tone.getContext().resume;                
-                Tone.getTransport().start()
+                Tone.getTransport().start();
                 document.querySelector("loading").setAttribute("style", "display:none;");
                 executed = true;
             }
