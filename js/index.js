@@ -91,6 +91,7 @@ function play(midi) {
         //Tone.getTransport().bpm.rampTo(globalTempo)
 
         let done = 0;
+        let valid = 0;
 
         //console.log(midi)
 
@@ -112,6 +113,10 @@ function play(midi) {
             if (instrumentName === "synthbrass_1") instrumentName = "synth_brass_1";
             if (instrumentName === "synthbrass_2") instrumentName = "synth_brass_2";
             if (instrumentName === "clavi") instrumentName = "clavinet";
+
+            if (track.notes.length <= 0) return;
+
+            valid++;
 
             Soundfont.instrument(mainContext, instrumentName, { 'soundfont': soundkit }).then(instrument => {
 
@@ -157,8 +162,7 @@ function play(midi) {
                 })
 
                 done++;
-                //console.log(done);
-                progress = (100 * (done / globalMidi.tracks.length)).toFixed(2)
+                progress = (100 * (done / valid)).toFixed(2)
                 if (progress != 100) {
                     document.querySelector("loading").textContent = "Loading, please wait... " + progress + " %";
                 } else {
@@ -178,7 +182,7 @@ function play(midi) {
                 mainContext.resume();
                 return;
             }
-            if (done == midi.tracks.length && !executed && Tone.getContext().state === "running" && mainContext.state === "running") {
+            if (done == valid && !executed && Tone.getContext().state === "running" && mainContext.state === "running") {
                 Tone.getTransport().start();
                 document.querySelector("loading").setAttribute("style", "display:none;");
                 executed = true;
@@ -199,7 +203,7 @@ app.ticker.add(function(time) {
     })
 
     if (Tone.getTransport()._timeline._timeline.length > 0) {
-        if (globalMidi && loaded && (false) && (app.stage.children.length == 0)) {
+        if (globalMidi && loaded && (Tone.getTransport().getSecondsAtTime(Tone.now()) > globalMidi.duration) && (app.stage.children.length == 0)) {
             console.log("Finished")
             console.log(Tone.getTransport()._timeline._timeline[Tone.getTransport()._timeline._timeline.length - 1].time)
             console.log(Tone.getTransport().toTicks(Tone.now()))
