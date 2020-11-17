@@ -53,6 +53,8 @@ function parseFile(file) {
     //read the file
     const reader = new FileReader();
     reader.onload = function(e) {
+        console.log(file);
+        window.DD_RUM && DD_RUM.addUserAction('ParseFile', { 'filename': file.name, 'size': file.size });
         const midi = new Midi(e.target.result);
         play(midi);
         globalMidi = midi;
@@ -71,6 +73,8 @@ let progress = 0;
 
 function play(midi) {
     if (midi) {
+
+        window.DD_RUM && DD_RUM.addUserAction('Play', { 'duration': midi.duration, 'name': midi.name });
 
         Tone.getTransport().stop()
 
@@ -204,9 +208,10 @@ app.ticker.add(function(time) {
 
     if (Tone.getTransport()._timeline._timeline.length > 0) {
         if (globalMidi && loaded && (Tone.getTransport().getSecondsAtTime(Tone.now()) > globalMidi.duration) && (app.stage.children.length == 0)) {
-            console.log("Finished")
-            console.log(Tone.getTransport()._timeline._timeline[Tone.getTransport()._timeline._timeline.length - 1].time)
-            console.log(Tone.getTransport().toTicks(Tone.now()))
+            //console.log("Finished")
+            window.DD_RUM && DD_RUM.addUserAction('Finished');
+            //console.log(Tone.getTransport()._timeline._timeline[Tone.getTransport()._timeline._timeline.length - 1].time)
+            //console.log(Tone.getTransport().toTicks(Tone.now()))
             document.querySelector("canvas").setAttribute("style", "display: none;");
             document.querySelector("tone-content").setAttribute("style", "display:block;");
             document.querySelector("loading").setAttribute("style", "display:block;");
