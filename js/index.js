@@ -115,7 +115,6 @@ function play(midi) {
 
             Soundfont.instrument(mainContext, instrumentName, { 'soundfont': soundkit }).then(instrument => {
 
-
                 midi.header.tempos.forEach(tempo => {
                     Tone.getTransport().schedule(function() {
                         //globalTempo = tempo.bpm;
@@ -152,7 +151,7 @@ function play(midi) {
                         newNote.filters = [new PIXI.filters.ColorMatrixFilter()]
                         newNote.filters[0].hue(track.channel * (app.ticker._requestId / Tone.getTransport().bpm.value))
                         app.stage.addChild(newNote);
-                        instrument.schedule(note.time + bar, [{ 'note': note.name, 'gain': note.velocity * 2, 'duration': note.duration }])
+                        instrument.schedule(mainContext.currentTime + bar, [{ 'note': note.name, 'gain': note.velocity * 2, 'duration': note.duration }])
                             // newNote.filters = [new PIXI.filters.GodrayFilter()]
                     }, note.time)
                 })
@@ -171,7 +170,7 @@ function play(midi) {
 
         app.ticker.add(function() {
             let executed = false;
-            if (done == midi.tracks.length && !executed && Tone.getContext().state === "running") {
+            if (done == midi.tracks.length && !executed && Tone.getContext().state === "running" && mainContext.state === "running") {
                 //Tone.getContext().resume;                
                 Tone.getTransport().start()
                 document.querySelector("loading").setAttribute("style", "display:none;");
