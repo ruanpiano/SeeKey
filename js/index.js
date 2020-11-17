@@ -34,19 +34,19 @@ if (!(
         fileDrop.classList.remove("Hover")
     );
 
-    document
-        .querySelector("#FileDrop input")
-        .addEventListener("change", (e) => {
-            const files = e.target.files;
-            if (files.length > 0) {
-                const file = files[0];
-                document.querySelector("#FileDrop #Text").textContent = file.name;
-                parseFile(file);
-            }
-        })
-        .addEventListener("click", function() {
-            Tone.start()
-        })
+    let input = document.querySelector("#FileDrop input");
+    input.addEventListener("change", (e) => {
+        const files = e.target.files;
+        if (files.length > 0) {
+            const file = files[0];
+            document.querySelector("#FileDrop #Text").textContent = file.name;
+            parseFile(file);
+        }
+    })
+    input.addEventListener("click", function() {
+        Tone.start()
+    })
+
 }
 
 function parseFile(file) {
@@ -152,7 +152,7 @@ function play(midi) {
                         newNote.filters = [new PIXI.filters.ColorMatrixFilter()]
                         newNote.filters[0].hue(track.channel * (app.ticker._requestId / Tone.getTransport().bpm.value))
                         app.stage.addChild(newNote);
-                        instrument.schedule(time + (Tone.getTransport().bpm.value / 60), [{ 'note': note.name, 'gain': note.velocity * 2, 'duration': note.duration }])
+                        instrument.schedule(Tone.getContext().currentTime + (Tone.getTransport().bpm.value / 60), [{ 'note': note.name, 'gain': note.velocity * 2, 'duration': note.duration }])
                             // newNote.filters = [new PIXI.filters.GodrayFilter()]
                     }, note.time)
                 })
@@ -160,7 +160,11 @@ function play(midi) {
                 done++;
                 //console.log(done);
                 progress = (100 * (done / globalMidi.tracks.length)).toFixed(2)
-                document.querySelector("loading").textContent = "Loading, please wait... " + progress + " %";
+                if (progress != 100) {
+                    document.querySelector("loading").textContent = "Loading, please wait... " + progress + " %";
+                } else {
+                    document.querySelector("loading").textContent = "Click anywhere to start";
+                }
             });
 
         })
