@@ -42,6 +42,7 @@ if (!(
                 const file = files[0];
                 document.querySelector("#FileDrop #Text").textContent = file.name;
                 parseFile(file);
+                Tone.start()
             }
         });
 }
@@ -89,7 +90,7 @@ function play(midi) {
 
         let done = 0;
 
-        console.log(midi)
+        //console.log(midi)
 
 
 
@@ -155,7 +156,7 @@ function play(midi) {
                 })
 
                 done++;
-                console.log(done);
+                //console.log(done);
                 progress = (100 * (done / globalMidi.tracks.length)).toFixed(2)
                 document.querySelector("loading").textContent = "Loading, please wait... " + progress + " %";
             });
@@ -165,8 +166,7 @@ function play(midi) {
         app.ticker.add(function() {
             let executed = false;
             if (done == midi.tracks.length && !executed) {
-                //Tone.getContext().resume;
-                Tone.start()
+                //Tone.getContext().resume;                
                 Tone.getTransport().start()
                 document.querySelector("loading").setAttribute("style", "display:none;");
                 executed = true;
