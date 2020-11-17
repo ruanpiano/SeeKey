@@ -160,6 +160,7 @@ function play(midi) {
         app.ticker.add(function() {
             if (done == midi.tracks.length) {
                 //Tone.getContext().resume;
+                Tone.start()
                 Tone.getTransport().start()
                 document.querySelector("loading").setAttribute("style", "display:none;");
             }
@@ -178,12 +179,16 @@ app.ticker.add(function(time) {
         }
     })
 
-    if (globalMidi && loaded && (Tone.getTransport()._scheduledEvents.length == 0) && (app.stage.children.length == 0)) {
-        console.log("Finished")
-        document.querySelector("canvas").setAttribute("style", "display: none;");
-        document.querySelector("tone-content").setAttribute("style", "display:block;");
-        document.querySelector("loading").setAttribute("style", "display:block;");
-        globalMidi = null;
-        loaded = false;
+    if (Tone.getTransport()._timeline._timeline.length > 0) {
+        if (globalMidi && loaded && (false) && (app.stage.children.length == 0)) {
+            console.log("Finished")
+            console.log(Tone.getTransport()._timeline._timeline[Tone.getTransport()._timeline._timeline.length - 1].time)
+            console.log(Tone.getTransport().toTicks(Tone.now()))
+            document.querySelector("canvas").setAttribute("style", "display: none;");
+            document.querySelector("tone-content").setAttribute("style", "display:block;");
+            document.querySelector("loading").setAttribute("style", "display:block;");
+            globalMidi = null;
+            loaded = false;
+        }
     }
 });
