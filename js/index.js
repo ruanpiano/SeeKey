@@ -152,7 +152,7 @@ function play(midi) {
                         newNote.filters = [new PIXI.filters.ColorMatrixFilter()]
                         newNote.filters[0].hue(track.channel * (app.ticker._requestId / Tone.getTransport().bpm.value))
                         app.stage.addChild(newNote);
-                        instrument.schedule(note.time, [{ 'note': note.name, 'gain': note.velocity * 2, 'duration': note.duration }])
+                        instrument.schedule(bar, [{ 'note': note.name, 'gain': note.velocity * 2, 'duration': note.duration }])
                             // newNote.filters = [new PIXI.filters.GodrayFilter()]
                     }, note.time)
                 })
