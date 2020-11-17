@@ -62,74 +62,115 @@ function parseFile(file) {
 
 let loaded = false;
 
+let mainContext = new AudioContext();
+
 function play(midi) {
     if (midi) {
 
-        Tone.context.resume();
+        Tone.getTransport().stop()
 
-        Soundfont.instrument(new AudioContext(), 'acoustic_grand_piano').then(piano => {
 
-            loaded = true;
-            document.querySelector("loading").setAttribute("style", "display:none;");
+        loaded = true;
 
-            if (!midi.header.tempos[0]) {
-                globalTempo = 120;
+        //Tone.getTransport().bpm.multiplier = midi.header.ppq;
+        Tone.getTransport().PPQ = midi.header.ppq;
+
+        if (!midi.header.tempos[0]) {
+            globalTempo = 120;
+        } else {
+
+            globalTempo = midi.header.tempos[0].bpm;
+
+        }
+
+        //Tone.getTransport().bpm.rampTo(globalTempo)
+
+        let done = 0;
+
+        console.log(midi)
+
+
+
+        midi.tracks.forEach((track, i) => {
+
+
+            let instrumentName = ""
+            let soundkit = "MusyngKite";
+            if (track.instrument.percussion) {
+                instrumentName = "percussion";
+                soundkit = "FluidR3_GM";
             } else {
-
-                globalTempo = midi.header.tempos[0].bpm;
+                instrumentName = track.instrument.name.replace(/[^\w\s]/gi, '').replaceAll(" ", "_");
             }
+            if (instrumentName === "synthstrings_1") instrumentName = "synth_strings_1";
+            if (instrumentName === "synthstrings_2") instrumentName = "synth_strings_2";
+            if (instrumentName === "synthbrass_1") instrumentName = "synth_brass_1";
+            if (instrumentName === "clavi") instrumentName = "clavinet";
 
-            midi.tracks.forEach((track, i) => {
-                /*midi.header.tempos.forEach(tempo => {
-                    Tone.getDraw().schedule(function() {
-                        globalTempo = tempo.bpm;
-                    }, tempo.time + Tone.now() + (globalTempo / 60))
-                });*/
+            Soundfont.instrument(mainContext, instrumentName, { 'soundfont': soundkit }).then(instrument => {
+
+
+                midi.header.tempos.forEach(tempo => {
+                    Tone.getTransport().schedule(function() {
+                        //globalTempo = tempo.bpm;
+                        // Tone.getTransport().bpm.value = tempo.bpm
+                    }, tempo.time + (Tone.getTransport().bpm.value / 60))
+                });
 
                 if (track.controlChanges[64]) {
 
                     track.controlChanges[64].forEach(event => {
                         //console.log(event)
-                        Tone.getDraw().schedule(function() {
+                        Tone.getTransport().schedule(function() {
                             if (event.value == 1)
-                                piano.opts.release = 127
+                                instrument.opts.release = 127
                             else
-                                piano.opts.release = 0.7;
-                        }, event.time + Tone.now() + (globalTempo / 60))
+                                instrument.opts.release = 0.7;
+                        }, event.time + (Tone.getTransport().bpm.value / 60))
                     })
                 }
 
                 track.notes.forEach(note => {
-                    if (track.instrument.percussion) return;
-                    //globalPiano.play(note.name, globalPiano.context.currentTime + note.time, { 'gain': note.velocity * 2 }).stop(globalPiano.context.currentTime + note.time + note.duration)
-                    Tone.getDraw().schedule(function() {
+                    /*if (track.instrument.percussion) return;
+                    if (track.instrument.family === "percussive") return;
+                    if (track.instrument.name === "timpani") return;*/
+                    //piano.play(note.name, piano.context.currentTime + note.time, { 'gain': note.velocity * 2 }).stop(piano.context.currentTime + note.time + note.duration)
+                    Tone.getTransport().schedule(function(time) {
                         let newNote = new PIXI.Graphics();
-                        //let hex = Math.floor(Math.abs(Math.sin(Tone.getDraw()._animationFrame) / 200) + 0xFFFFFF);
-                        newNote.beginFill(0xFF0000, note.velocity)
-                        let height = (note.duration * globalTempo);
+                        let hex = Math.floor(0xFF0000);
+                        newNote.beginFill(hex, note.velocity)
+                        let height = (note.duration * Tone.getTransport().bpm.value);
                         newNote.drawRect((note.midi - 21) / 88 * app.screen.width, 0 - height, (app.screen.width / 88), height);
                         newNote.endFill();
-                        // newNote.pivot
-                        newNote.note = note;
-                        newNote.note.channel = i;
-                        newNote.time = Date.now();
-                        newNote.note.played = false;
+                        let bar = Tone.getTransport().bpm.value / 60;
                         newNote.filters = [new PIXI.filters.ColorMatrixFilter()]
-                        newNote.filters[0].hue(Tone.getDraw()._animationFrame / globalTempo)
+                        newNote.filters[0].hue(track.channel * (app.ticker._requestId / Tone.getTransport().bpm.value))
                         app.stage.addChild(newNote);
-                        piano.play(note.name, piano.context.currentTime + (globalTempo / 60), { 'gain': note.velocity * 2 }).stop(piano.context.currentTime + (globalTempo / 60) + note.duration)
+                        instrument.schedule(time + (Tone.getTransport().bpm.value / 60), [{ 'note': note.name, 'gain': note.velocity * 2, 'duration': note.duration }])
                             // newNote.filters = [new PIXI.filters.GodrayFilter()]
-                    }, note.time + Tone.now())
+                    }, note.time)
                 })
 
+                done++;
+                console.log(done);
             });
+
         })
+
+        app.ticker.add(function() {
+            if (done == midi.tracks.length) {
+                //Tone.getContext().resume;
+                Tone.getTransport().start()
+                document.querySelector("loading").setAttribute("style", "display:none;");
+            }
+        })
+
     }
 }
 
-PIXI.Ticker.shared.add(function(time) {
+app.ticker.add(function(time) {
     app.stage.children.forEach(child => {
-        child.y += app.screen.height / globalTempo;
+        child.y += time * (app.screen.height / Tone.getTransport().bpm.value);
 
         if (child.y > app.screen.height + child.height) {
             child.destroy();
@@ -137,7 +178,7 @@ PIXI.Ticker.shared.add(function(time) {
         }
     })
 
-    if (globalMidi && loaded && (Tone.getDraw()._events.length == 0) && (app.stage.children.length == 0)) {
+    if (globalMidi && loaded && (Tone.getTransport()._scheduledEvents.length == 0) && (app.stage.children.length == 0)) {
         console.log("Finished")
         document.querySelector("canvas").setAttribute("style", "display: none;");
         document.querySelector("tone-content").setAttribute("style", "display:block;");
