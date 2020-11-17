@@ -170,8 +170,11 @@ function play(midi) {
 
         app.ticker.add(function() {
             let executed = false;
-            if (Tone.getContext().state !== "running" && mainContext.state !== "running") {
+            if (Tone.getContext().state !== "running") {
                 Tone.getContext().resume();
+                return;
+            }
+            if (mainContext.state !== "running") {
                 mainContext.resume();
                 return;
             }
