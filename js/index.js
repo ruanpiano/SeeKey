@@ -4,12 +4,26 @@ let globalMidi = null;
     globalMidi = midi;
 })*/
 
-const app = new PIXI.Application({
-    autoResize: true,
-    resolution: devicePixelRatio
-});
+let app = null;
 
-document.body.appendChild(app.view);
+initApp();
+
+function initApp() {
+    app = new PIXI.Application({
+        autoResize: true,
+        resolution: devicePixelRatio,
+        alpha: 0,
+        transparent: true,
+    });
+    document.body.appendChild(app.view);
+    app.stage.sortableChildren = true;
+}
+
+
+
+
+
+const blacknotes = [1, 3, 6, 8, 10, 13, 15, 18, 20, 22, 25, 27, 30, 32, 34, 37, 39, 42, 44, 46, 49, 51, 54, 56, 58, 61, 63, 66, 68, 70, 73, 75, 78, 80, 82, 85, 87, 90, 92, 94, 97, 99, 102, 104, 106, 109, 111, 114, 116, 118, 121, 123, 126];
 
 if (!(
         window.File &&
@@ -49,6 +63,11 @@ if (!(
 
 }
 
+function rgbToHex(r, g, b) {
+    let value = "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    return parseInt(value.replace(/^#/, ''), 16);
+}
+
 function parseFile(file) {
     //read the file
     const reader = new FileReader();
@@ -73,6 +92,7 @@ let progress = 0;
 
 function play(midi) {
     if (midi) {
+        let progress = 0;
 
         window.DD_RUM && DD_RUM.addUserAction('Play', { 'duration': midi.duration, 'name': midi.name });
 
@@ -151,14 +171,75 @@ function play(midi) {
                     //piano.play(note.name, piano.context.currentTime + note.time, { 'gain': note.velocity * 2 }).stop(piano.context.currentTime + note.time + note.duration)
                     Tone.getTransport().schedule(function(time) {
                         let newNote = new PIXI.Graphics();
-                        let hex = Math.floor(0xFF0000);
-                        newNote.beginFill(hex, note.velocity)
+                        newNote.beginFill(0xFFFFFF, note.velocity)
                         let height = (note.duration * Tone.getTransport().bpm.value);
-                        newNote.drawRect((note.midi - 21) / 88 * app.screen.width, 0 - height, (app.screen.width / 88), height);
+                        newNote.x = (note.midi - 21) / 88 * app.screen.width
+                        newNote.y = 0 - height
+                        newNote.width = (app.screen.width / 88)
+                        newNote.height = height
+                        newNote.drawRect(0, 0, (app.screen.width / 88), height);
                         newNote.endFill();
                         let bar = Tone.getTransport().bpm.value / 60;
-                        newNote.filters = [new PIXI.filters.ColorMatrixFilter()]
-                        newNote.filters[0].hue(track.channel * (app.ticker._requestId / Tone.getTransport().bpm.value))
+                        //newNote.filters = [new PIXI.filters.ColorMatrixFilter()]
+                        //newNote.filters[0].hue(track.channel * (app.ticker._requestId / Tone.getTransport().bpm.value))
+                        //console.log(track.channel)
+
+                        switch (track.channel) {
+                            case 1:
+                                newNote.tint = 0x62E357;
+                                break;
+                            case 2:
+                                newNote.tint = 0xe85f3d;
+                                break;
+                            case 3:
+                                newNote.tint = 0xfc2587;
+                                break;
+                            case 4:
+                                newNote.tint = 0x533fe7;
+                                break;
+                            case 5:
+                                newNote.tint = 0x4e88ed;
+                                break;
+                            case 6:
+                                newNote.tint = 0xdcc5e9;
+                                break;
+                            case 7:
+                                newNote.tint = 0xfce037;
+                                break;
+                            case 8:
+                                newNote.tint = 0xeeaead;
+                                break;
+                            case 9:
+                                newNote.tint = 0xbb0429;
+                                break;
+                            case 10:
+                                newNote.tint = 0xbeca58;
+                                break;
+                            case 11:
+                                newNote.tint = 0xbc1f6d;
+                                break;
+                            case 12:
+                                newNote.tint = 0xcdfc8b;
+                                break;
+                            case 13:
+                                newNote.tint = 0x5c45b2;
+                                break;
+                            case 14:
+                                newNote.tint = 0xd50b0d;
+                                break;
+                            case 15:
+                                newNote.tint = 0xaff4c3;
+                                break;
+                            case 16:
+                                newNote.tint = 0x04eccd;
+                                break;
+                            default:
+                                newNote.tint = 0xFFF1234;
+                                break;
+                        }
+                        newNote.type = "note"
+                        newNote.zIndex = -1;
+                        newNote.note = note;
                         app.stage.addChild(newNote);
                         instrument.schedule(mainContext.currentTime + bar, [{ 'note': note.name, 'gain': note.velocity * 2, 'duration': note.duration }])
                             // newNote.filters = [new PIXI.filters.GodrayFilter()]
@@ -193,30 +274,128 @@ function play(midi) {
             }
         })
 
+        initProgressBar();
+        initVerifier();
+
     }
 }
 
-app.ticker.add(function(time) {
-    app.stage.children.forEach(child => {
-        child.y += time * (app.screen.height / Tone.getTransport().bpm.value);
+function initProgressBar() {
+    var progressBar = new PIXI.Graphics()
+    progressBar.beginFill(0xFFFFFF, 1)
+    progressBar.drawRect(0, 0, 10, 10);
+    progressBar.endFill();
+    progressBar.height = 10
+    progressBar.y = 0
+    progressBar.type = "progress"
+    progressBar.x = 0
+    app.stage.addChild(progressBar);
+}
 
-        if (child.y > app.screen.height + child.height) {
-            child.destroy();
-            app.stage.removeChild(child);
+function initVerifier() {
+    app.ticker.addOnce(function(time) {
+        for (let i = 21; i <= 108; i++) {
+            let note = new PIXI.Graphics();
+            note.x = (i - 21) * (app.screen.width / 88);
+            note.y = app.screen.height - 50;
+            note.width = 10;
+            note.midi = i;
+            note.beginFill(0xFFFFFF, 1);
+            if (blacknotes.includes(i)) {
+                note.tint = 0x000000;
+                note.drawRect(0, 0, 10, 25);
+                note.zIndex = 101;
+                note.height = 25;
+            } else {
+                note.tint = 0xFFFFFF;
+                note.drawRect(0, 0, 10, 50);
+                note.height = 50;
+                note.zIndex = 100;
+            }
+            note.endFill();
+            note.type = "keyboard";
+            //note.filters = [new PIXI.filters.ColorOverlayFilter()]
+            //note.filters[0].enabled = false
+            //note.filters[0].color = 0xFF0000
+            app.stage.addChild(note);
         }
+        let whiteBackground = new PIXI.Graphics();
+        whiteBackground.beginFill(0xFFFFFF, 1)
+        whiteBackground.drawRect(0, app.screen.height - 50, app.screen.width, 50)
+        whiteBackground.endFill()
+
+        app.stage.addChild(whiteBackground)
     })
+    app.ticker.add(function(time) {
+        app.stage.children.forEach(function(child) {
+            if (child.type == "progress" && loaded) {
+                child.width = app.screen.width * Tone.Transport.seconds / (globalMidi.duration + app.screen.height / Tone.getTransport().bpm.value / 2)
 
-    if (Tone.getTransport()._timeline._timeline.length > 0) {
-        if (globalMidi && loaded && (Tone.getTransport().getSecondsAtTime(Tone.now()) > globalMidi.duration) && (app.stage.children.length == 0)) {
-            //console.log("Finished")
-            window.DD_RUM && DD_RUM.addUserAction('Finished');
-            //console.log(Tone.getTransport()._timeline._timeline[Tone.getTransport()._timeline._timeline.length - 1].time)
-            //console.log(Tone.getTransport().toTicks(Tone.now()))
-            document.querySelector("canvas").setAttribute("style", "display: none;");
-            document.querySelector("tone-content").setAttribute("style", "display:block;");
-            document.querySelector("loading").setAttribute("style", "display:block;");
-            globalMidi = null;
-            loaded = false;
+                if (child.width >= app.screen.width) {
+                    //child.destroy();
+                    app.stage.removeChild(child);
+                    return;
+                }
+            }
+
+            if (child.type === "note") {
+                child.y += time * (app.screen.height / Tone.getTransport().bpm.value);
+
+                app.stage.children.filter(function(search) {
+                        if (search.midi == child.note.midi && child.y > app.screen.height - child.height - 50) {
+                            //search.filters[0].color = child.tint;
+                            //search.filters[0].enabled = true;
+                            search.tint = child.tint;
+                        }
+                        if (search.midi == child.note.midi && child.y > app.screen.height - 50) {
+                            if (blacknotes.includes(search.midi))
+                                search.tint = 0x000000
+                            else
+                                search.tint = 0xFFFFFF
+                                //search.filters[0].enabled = false;
+                        }
+                    }) //_enabledFilters[0].matrix
+            }
+
+            if (child.y > app.screen.height + child.height) {
+                //child.destroy();
+                app.stage.removeChild(child);
+            }
+        })
+
+        if (Tone.getTransport()._timeline._timeline.length > 0) {
+            notes = app.stage.children.filter(function(a) { if (a.type == "note") return a })
+            if (globalMidi && loaded && (Tone.Transport.seconds > globalMidi.duration) && (notes.length == 0)) {
+                //console.log("Finished")
+                window.DD_RUM && DD_RUM.addUserAction('Finished');
+                //console.log(Tone.getTransport()._timeline._timeline[Tone.getTransport()._timeline._timeline.length - 1].time)
+                //console.log(Tone.getTransport().toTicks(Tone.Transport.seconds))
+                document.querySelector("canvas").setAttribute("style", "display: none;");
+                document.querySelector("tone-content").setAttribute("style", "display:block;");
+                document.querySelector("loading").setAttribute("style", "display:block;");
+
+                //app.ticker.destroy();
+                //app.ticker = new PIXI.Ticker.constructor
+                Tone.Transport.cancel(0)
+
+                app.ticker.stop()
+                app.destroy()
+                app = null;
+                initApp()
+                app.ticker.start()
+
+                document.querySelector("input").value = ""
+                document.querySelector("input").files = null;
+
+                globalMidi = null;
+                loaded = false;
+
+                for (let i = 0; i < document.getElementsByTagName("canvas").length; i++) {
+                    document.getElementsByTagName("canvas")[i].remove();
+                }
+
+
+            }
         }
-    }
-});
+    });
+}
