@@ -1,5 +1,20 @@
 let globalMidi = null;
 
+const getDeviceType = () => {
+    const ua = navigator.userAgent;
+    if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
+        return "tablet";
+    }
+    if (
+        /Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(
+            ua
+        )
+    ) {
+        return "mobile";
+    }
+    return "desktop";
+};
+
 /*const midi = Midi.fromUrl("abwhsolo.mid").then(midi => {
     globalMidi = midi;
 })*/
@@ -8,11 +23,21 @@ let app = null;
 
 initApp();
 
+document.querySelector(".webgl").textContent += app.renderer.context.webGLVersion;
+
 function initApp() {
+    let appWidth = screen.width / 3;
+    let appHeight = screen.height / 3;
+    if (getDeviceType() === "desktop") {
+        appWidth = screen.width
+        appHeight = screen.height;
+    }
     app = new PIXI.Application({
         autoResize: true,
         resolution: devicePixelRatio,
-        alpha: 0,
+        width: 800,
+        height: 600,
+
         transparent: true,
     });
     document.body.appendChild(app.view);
@@ -53,7 +78,7 @@ if (!(
         const files = e.target.files;
         if (files.length > 0) {
             const file = files[0];
-            document.querySelector("#FileDrop #Text").textContent = file.name;
+            //document.querySelector("#FileDrop #Text").textContent = file.name;
             parseFile(file);
         }
     })
@@ -75,11 +100,13 @@ function parseFile(file) {
         console.log(file);
         window.DD_RUM && DD_RUM.addUserAction('ParseFile', { 'filename': file.name, 'size': file.size });
         const midi = new Midi(e.target.result);
+        if (!app) initApp();
         play(midi);
         globalMidi = midi;
         document.querySelector("canvas").setAttribute("style", "display: block;");
         document.querySelector("tone-content").setAttribute("style", "display:none;");
         document.querySelector("loading").setAttribute("style", "display:block;");
+        document.querySelector("bottom").setAttribute("style", "display:none;");
     };
     reader.readAsArrayBuffer(file);
 }
@@ -89,6 +116,24 @@ let loaded = false;
 let mainContext = new AudioContext();
 
 let progress = 0;
+
+function fancyTimeFormat(duration) {
+    // Hours, minutes and seconds
+    var hrs = ~~(duration / 3600);
+    var mins = ~~((duration % 3600) / 60);
+    var secs = ~~duration % 60;
+
+    // Output like "1:01" or "4:03:59" or "123:03:59"
+    var ret = "";
+
+    if (hrs > 0) {
+        ret += "" + hrs + ":" + (mins < 10 ? "0" : "");
+    }
+
+    ret += "" + mins + ":" + (secs < 10 ? "0" : "");
+    ret += "" + secs;
+    return ret;
+}
 
 function play(midi) {
     if (midi) {
@@ -137,6 +182,7 @@ function play(midi) {
             if (instrumentName === "synthbrass_1") instrumentName = "synth_brass_1";
             if (instrumentName === "synthbrass_2") instrumentName = "synth_brass_2";
             if (instrumentName === "clavi") instrumentName = "clavinet";
+            if (instrumentName === "synth_voice") instrumentName = "lead_6_voice";
 
             if (track.notes.length <= 0) return;
 
@@ -290,25 +336,47 @@ function initProgressBar() {
     progressBar.type = "progress"
     progressBar.x = 0
     app.stage.addChild(progressBar);
+
+    const style = new PIXI.TextStyle({
+        fontFamily: 'Roboto',
+        fontSize: 15,
+        fontWeight: 'bold',
+        fill: ['#ffffff'],
+        dropShadow: true,
+        dropShadowColor: '#000000',
+        dropShadowBlur: 4,
+        dropShadowAngle: Math.PI / 6,
+        dropShadowDistance: 6,
+        wordWrap: true,
+        wordWrapWidth: 440,
+        lineJoin: 'round'
+    });
+
+    var time = new PIXI.Text("0:00 / 0:00", style);
+    time.type = "text";
+    time.position.x = 0;
+    time.position.y = 15;
+    app.stage.addChild(time);
 }
 
 function initVerifier() {
     app.ticker.addOnce(function(time) {
         for (let i = 21; i <= 108; i++) {
             let note = new PIXI.Graphics();
+            let noteSize = (app.screen.width / 88);
             note.x = (i - 21) * (app.screen.width / 88);
             note.y = app.screen.height - 50;
-            note.width = 10;
+            note.width = noteSize;
             note.midi = i;
             note.beginFill(0xFFFFFF, 1);
             if (blacknotes.includes(i)) {
                 note.tint = 0x000000;
-                note.drawRect(0, 0, 10, 25);
+                note.drawRect(0, 0, noteSize, 25);
                 note.zIndex = 101;
                 note.height = 25;
             } else {
                 note.tint = 0xFFFFFF;
-                note.drawRect(0, 0, 10, 50);
+                note.drawRect(0, 0, noteSize, 50);
                 note.height = 50;
                 note.zIndex = 100;
             }
@@ -336,6 +404,10 @@ function initVerifier() {
                     app.stage.removeChild(child);
                     return;
                 }
+            }
+
+            if (child.type == "text" && Tone.Transport.seconds >= (app.screen.height - 50) / (Tone.getTransport().bpm.value * 2)) {
+                child.text = fancyTimeFormat(Tone.Transport.seconds - (app.screen.height - 50) / (Tone.getTransport().bpm.value * 2)) + ' / ' + fancyTimeFormat(globalMidi.duration)
             }
 
             if (child.type === "note") {
@@ -372,7 +444,8 @@ function initVerifier() {
                 //console.log(Tone.getTransport().toTicks(Tone.Transport.seconds))
                 document.querySelector("canvas").setAttribute("style", "display: none;");
                 document.querySelector("tone-content").setAttribute("style", "display:block;");
-                document.querySelector("loading").setAttribute("style", "display:block;");
+                document.querySelector("bottom").setAttribute("style", "display:block;");
+                //document.querySelector("loading").setAttribute("style", "display:block;");
 
                 //app.ticker.destroy();
                 //app.ticker = new PIXI.Ticker.constructor
@@ -381,7 +454,7 @@ function initVerifier() {
                 app.ticker.stop()
                 app.destroy()
                 app = null;
-                initApp()
+                initApp();
                 app.ticker.start()
 
                 document.querySelector("input").value = ""

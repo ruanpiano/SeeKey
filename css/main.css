@@ -1,0 +1,66 @@
+body {
+    margin: 0px;
+    font: xx-large Sans-serif;
+    color: white;
+    background-color: #B4D0DC;
+}
+
+canvas {
+    display: none;
+    width: 100%;
+    height: 100%;
+    background-color: #333;
+}
+
+loading {
+    display: none;
+    text-align: center;
+    position: fixed;
+    top: 50%;
+    font-size: xxx-large;
+    color: white;
+    width: 100%;
+    font-family: monospace;
+}
+
+#Description {
+    background-color: #127DB5;
+    height: 100px;
+    color: white;
+    vertical-align: middle;
+}
+
+#Description img {
+    height: 100px;
+    vertical-align: middle;
+}
+
+.btn {
+    background-color: #099C16;
+    display: block;
+    border-radius: 5px;
+    margin-top: 10px;
+    width: 300px;
+    height: 60px;
+    text-align: center;
+}
+
+bottom {
+    position: absolute;
+    bottom: 0px;
+    background-color: #127DB5;
+    width: 100%;
+}
+
+bottom a {
+    color: white;
+}
+
+bottom div {
+    display: inline-block
+}
+
+bottom .webgl {
+    position: absolute;
+    right: 0px;
+}

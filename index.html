@@ -10,45 +10,32 @@
     <script src="https://www.datadoghq-browser-agent.com/datadog-rum.js" type="text/javascript">
     </script>
     <script>
+        const appVersion = '17:21-29/11/2020';
+        let appEnv = null
+        if (location.hostname === "127.0.0.1")
+            appEnv = "local"
+        else
+            appEnv = "prod"
+
         window.DD_RUM && window.DD_RUM.init({
             applicationId: 'fdfefcb2-313e-4a8a-9cd9-bad8101c8dd9',
             clientToken: 'pubcbdbd6ecf9dcf43be5f743594d41b5b2',
             site: 'datadoghq.com',
-            version: '17:21-29/11/2020',
+            version: appVersion,
+            env: appEnv,
             sampleRate: 100,
             trackInteractions: true
         });
         window.DD_LOGS && DD_LOGS.init({
             clientToken: 'pubcbdbd6ecf9dcf43be5f743594d41b5b2',
             site: 'datadoghq.com',
-            version: '17:21-29/11/2020',
+            version: appVersion,
+            env: appEnv,
             forwardErrorsToLogs: true,
             sampleRate: 100,
         })
     </script>
-
-    <style>
-        body {
-            margin: 0px;
-        }
-        
-        canvas {
-            display: none;
-            width: 100%;
-            height: 100%;
-            background-color: #333;
-        }
-        
-        loading {
-            text-align: center;
-            position: fixed;
-            top: 50%;
-            font-size: xxx-large;
-            color: white;
-            width: 100%;
-            font-family: monospace;
-        }
-    </style>
+    <link rel="stylesheet" href="css/main.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title> Synthesia Clone </title>
 </head>
@@ -56,17 +43,19 @@
 <body>
     <tone-content>
         <div id="Description">
-            @ruanpianos's SeeKey -- A friendly Synthesia Clone
+            <img src="https://boolbird.com/wp-content/uploads/2020/04/synthesia-logo.png"></img>SeeKey
         </div>
         <div id="FileDrop">
-            <div id="Text">
-                Please, drop a midi file here to see the magic happen.
-            </div>
-            <input type="file" onclick="this.value=null" accept="audio/midi" />
+            <label for="files" id="Text" class="btn">Play a Song</label>
+            <input id="files" type="file" onclick="this.value=null" style="display: none;" accept="audio/midi" />
         </div>
         <tone-play-toggle disabled></tone-play-toggle>
     </tone-content>
     <loading>Loading, please wait...</loading>
+    <bottom>
+        <div><a href="https://github.com/ruanpiano/SeeKey"> GitHub</a></div>
+        <div class="webgl">WebGL v</div>
+    </bottom>
 </body>
 
 <script src="js/index.js"></script>
