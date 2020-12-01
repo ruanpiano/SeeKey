@@ -37,17 +37,36 @@ loading {
 
 .btn {
     background-color: #099C16;
-    display: block;
+    display: table-cell;
     border-radius: 5px;
-    margin-top: 10px;
     width: 300px;
     height: 60px;
     text-align: center;
+    vertical-align: middle;
+    position: relative;
+    left: 7px;
+    top: 10px;
+}
+
+.btn-disabled {
+    background-color: #777777;
+    color: white;
+    text-decoration: none;
+    display: table-cell;
+    border-radius: 5px;
+    width: 300px;
+    height: 60px;
+    text-align: center;
+    vertical-align: middle;
+    position: relative;
+    left: 7px;
+    top: 20px;
 }
 
 bottom {
     position: absolute;
     bottom: 0px;
+    left: 0px;
     background-color: #127DB5;
     width: 100%;
 }

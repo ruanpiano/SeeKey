@@ -26,17 +26,17 @@ initApp();
 document.querySelector(".webgl").textContent += app.renderer.context.webGLVersion;
 
 function initApp() {
-    let appWidth = screen.width / 3;
-    let appHeight = screen.height / 3;
+    let appWidth = (800 / 1);
+    let appHeight = (600 / 1);
     if (getDeviceType() === "desktop") {
-        appWidth = screen.width
-        appHeight = screen.height;
+        appWidth = 800
+        appHeight = 600
     }
     app = new PIXI.Application({
         autoResize: true,
         resolution: devicePixelRatio,
-        width: 800,
-        height: 600,
+        width: appWidth,
+        height: appHeight,
 
         transparent: true,
     });

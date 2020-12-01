@@ -37,7 +37,8 @@
         function nameToUrl(name, sf, format) {
             format = format === "ogg" ? format : "mp3";
             sf = sf === "FluidR3_GM" ? sf : "MusyngKite";
-            return "https://gleitz.github.io/midi-js-soundfonts/" + sf + "/" + name + "-" + format + ".js"
+            //return "https://gleitz.github.io/midi-js-soundfonts/" + sf + "/" + name + "-" + format + ".js"
+            return "https://seekey.s3-sa-east-1.amazonaws.com/" + sf + "/" + name + "-" + format + ".js"
         }
         var Soundfont = require("./legacy");
         Soundfont.instrument = instrument;
