@@ -35,6 +35,14 @@ loading {
     vertical-align: middle;
 }
 
+#Version {
+    position: fixed;
+    right: 0px;
+    top: 0px;
+    font-size: medium;
+    color: white;
+}
+
 .btn {
     background-color: #099C16;
     display: table-cell;
