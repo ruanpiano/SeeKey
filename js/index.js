@@ -24,7 +24,6 @@ let app = null;
 initApp();
 
 document.querySelector(".webgl").textContent += app.renderer.context.webGLVersion;
-document.querySelector("#Version").textContent += appVersion;
 
 function initApp() {
     let appWidth = (800 / 1);

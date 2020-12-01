@@ -39,6 +39,8 @@
                 appVersion = json.pushed_at
             }
 
+            document.querySelector("#Version").textContent += appVersion;
+
             window.DD_RUM && window.DD_RUM.init({
                 applicationId: 'fdfefcb2-313e-4a8a-9cd9-bad8101c8dd9',
                 clientToken: 'pubcbdbd6ecf9dcf43be5f743594d41b5b2',
