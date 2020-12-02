@@ -23,6 +23,38 @@ loading {
     font-family: monospace;
 }
 
+library {
+    position: absolute;
+    left: 0px;
+    top: 1px;
+    margin: auto;
+    text-align: center;
+    width: 100%;
+    background-color: #FFFFFFCC;
+    height: 100%;
+    vertical-align: middle;
+    display: none;
+}
+
+library div {
+    background-color: #099C16;
+    margin: 10px;
+    border-radius: 5px;
+    padding: 5px;
+    color: white;
+    text-decoration: none;
+    text-align: center;
+    vertical-align: middle;
+}
+
+library a {
+    text-decoration: none;
+}
+
+#btn-close div {
+    background-color: red;
+}
+
 #Description {
     background-color: #127DB5;
     height: 100px;
@@ -43,17 +75,22 @@ loading {
     color: white;
 }
 
+#Library,
+#Play {
+    text-decoration: none;
+}
+
 .btn {
     background-color: #099C16;
-    display: table-cell;
     border-radius: 5px;
     width: 300px;
     height: 60px;
     text-align: center;
-    vertical-align: middle;
     position: relative;
-    left: 7px;
-    top: 10px;
+    vertical-align: middle;
+    margin: 10px;
+    color: white;
+    text-decoration: none;
 }
 
 .btn-disabled {

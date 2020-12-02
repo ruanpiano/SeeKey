@@ -47,6 +47,49 @@ function initApp() {
 
 
 
+document.querySelector("#Library").addEventListener("click", function(e) {
+    e.preventDefault();
+    let ids = []
+    let midi = null
+    fetch("https://kzo89ov9cg.execute-api.sa-east-1.amazonaws.com/default/libraryFunction?TableName=Music")
+        .then(function(response) {
+            return response.json()
+        })
+        .then(function(json) {
+            //console.log(json)
+            document.querySelector("Library").innerHTML = "";
+
+            json.Items.forEach(function(item) {
+                document.querySelector("Library").style = "display: block;"
+                document.querySelector("Library").innerHTML += "<a id='" + item.ID + "' href='#'><div>" + item.tags.title + "</div></a>";
+                ids.push(item)
+                    /*
+                    })*/
+            })
+            document.querySelector("Library").innerHTML += "<a id=\"btn-close\" href='#'><div>Close</div></a>";
+            document.querySelector("#btn-close").addEventListener("click", function(e) {
+                document.querySelector("Library").style = "display: none;"
+            })
+        })
+        .then(function() {
+            ids.forEach(function(id) {
+                let selector = document.getElementById(id.ID)
+                selector.addEventListener("click", async function(e) {
+                    midi = await Midi.fromUrl("https://seekey.s3-sa-east-1.amazonaws.com/midis/" + id.filename);
+                    //console.log(midi)
+                    initPlayer(midi)
+                })
+            })
+        })
+
+});
+
+document.querySelector("#Play").addEventListener("click", function(e) {
+    e.preventDefault();
+    document.querySelector("input").click()
+})
+
+
 
 const blacknotes = [1, 3, 6, 8, 10, 13, 15, 18, 20, 22, 25, 27, 30, 32, 34, 37, 39, 42, 44, 46, 49, 51, 54, 56, 58, 61, 63, 66, 68, 70, 73, 75, 78, 80, 82, 85, 87, 90, 92, 94, 97, 99, 102, 104, 106, 109, 111, 114, 116, 118, 121, 123, 126];
 
@@ -93,6 +136,18 @@ function rgbToHex(r, g, b) {
     return parseInt(value.replace(/^#/, ''), 16);
 }
 
+function initPlayer(midi) {
+    if (!app) initApp();
+    play(midi);
+    globalMidi = midi;
+    document.querySelector("canvas").setAttribute("style", "display: block;");
+    document.querySelector("tone-content").setAttribute("style", "display:none;");
+    document.querySelector("loading").setAttribute("style", "display:block;");
+    document.querySelector("bottom").setAttribute("style", "display:none;");
+    document.querySelector("Library").style = "display: none;"
+
+}
+
 function parseFile(file) {
     //read the file
     const reader = new FileReader();
@@ -100,13 +155,8 @@ function parseFile(file) {
         console.log(file);
         window.DD_RUM && DD_RUM.addUserAction('ParseFile', { 'filename': file.name, 'size': file.size });
         const midi = new Midi(e.target.result);
-        if (!app) initApp();
-        play(midi);
-        globalMidi = midi;
-        document.querySelector("canvas").setAttribute("style", "display: block;");
-        document.querySelector("tone-content").setAttribute("style", "display:none;");
-        document.querySelector("loading").setAttribute("style", "display:block;");
-        document.querySelector("bottom").setAttribute("style", "display:none;");
+        initPlayer(midi);
+
     };
     reader.readAsArrayBuffer(file);
 }

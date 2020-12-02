@@ -31,20 +31,28 @@
         </div>
         <div id="Version"></div>
         <div id="FileDrop">
-            <label for="files" id="Text" class="btn">Play a Song</label>
             <input id="files" type="file" onclick="this.value=null" style="display: none;" accept="audio/midi" />
         </div>
-        <a href="javascript:alert('This function was not implemented yet')" class="btn-disabled "> Library</a>
+        <a id="Play" href="#">
+            <div class="btn">Play a Song
+            </div>
+        </a>
+        <a id="Library" href="#">
+            <div class="btn">Library</div>
+        </a>
         <tone-play-toggle disabled></tone-play-toggle>
     </tone-content>
     <loading>Loading, please wait...</loading>
+    <library>
+
+    </library>
     <bottom>
         <div><a href="https://github.com/ruanpiano/SeeKey "> GitHub</a></div>
         <div class="webgl ">WebGL v</div>
     </bottom>
 </body>
 
-<script src="js/index.js "></script>
+<script defer src="js/index.js "></script>
 <script>
     let appVersion = null
     let appEnv = null
