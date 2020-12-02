@@ -1,0 +1,7 @@
+path_classifiers:
+  test:
+    - exclude: /js/midi.js
+    - exclude: /js/note.js
+    - exclude: /js/pixi-filters.js
+    - exclude: /js/pixi.js
+    - exclude: /js/tone.js
